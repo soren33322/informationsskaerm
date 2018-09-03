@@ -1,0 +1,99 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Data.SqlClient;
+using System.Data.OleDb;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Windows.Forms;
+using System.Threading;
+
+namespace Infoscreen
+{
+    public partial class infoScreen : Form
+    {
+
+        static SqlConnection cnn = new SqlConnection(
+            "Data Source=172.16.10.39;" +
+            "Initial Catalog=infoSQL;" +
+            "User ID=infoSQL;" +
+            "Password=skpadmin1324.");
+        static SqlCommand cmd = new SqlCommand();
+
+        string sqlquery = "SELECT text FROM dbo.info";
+
+        public infoScreen()
+        {
+            InitializeComponent();
+            richTextBox1.SelectionAlignment = HorizontalAlignment.Center;
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            try
+            {
+                cnn.Open();
+                label1.Text = "Connected!";
+            }
+            catch (Exception ex)
+            {
+                label1.Text = "Disconnected!";
+            }
+
+            System.Windows.Forms.Timer timer = new System.Windows.Forms.Timer();
+            timer.Interval = (10000); // 10 secs
+            timer.Tick += new EventHandler(tid);
+            timer.Start();
+            timer.Enabled = true;
+
+        }
+        private void tid(Object tiden, EventArgs Tiden)
+        {
+            refresh();
+        }
+
+        private void refresh()
+        {
+            SqlCommand command = new SqlCommand(sqlquery, cnn);
+            SqlDataReader sdr = command.ExecuteReader();
+
+            while (sdr.Read())
+            {
+                if (sdr.HasRows)
+                {
+                    richTextBox1.Text = sdr["text"].ToString();
+                    Thread.Sleep(7000); //7 sek
+                }
+                else
+                {
+                    richTextBox1.Clear();
+                }
+            }
+            sdr.Close();
+
+            cmd.Connection = cnn;
+            cmd.CommandText = $"delete from dbo.info where delete2 = '{DateTime.Now.Date.ToString("yyyy-MM-dd")}'";
+            cmd.ExecuteNonQuery();
+        }
+
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+            label2.Text = DateTime.Now.ToString("dd-MM-yyyy hh:mm");
+        }
+
+        private void infoScreen_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            cnn.Close();
+        }
+
+        private void richTextBox1_TextChanged(object sender, EventArgs e)
+        {
+            richTextBox1.ReadOnly = true;
+        }
+
+    }
+}
+
+
